@@ -24,31 +24,20 @@ class VerticalDragInfo {
   }
 }
 
-class ColorUtils {
-  /// Calculate luminance of an RGB color
-  static double luminance(List<int> rgb) {
-    double r = rgb[0] / 255.0;
-    double g = rgb[1] / 255.0;
-    double b = rgb[2] / 255.0;
+class ContrastHelper {
+  static double luminance(int? r, int? g, int? b) {
+    final a = [r, g, b].map((it) {
+      double value = it!.toDouble() / 255.0;
+      return value <= 0.03928
+          ? value / 12.92
+          : pow((value + 0.055) / 1.055, 2.4);
+    }).toList();
 
-    List<double> rs = [r, g, b];
-
-    for (int i = 0; i < 3; i++) {
-      if (rs[i] <= 0.03928) {
-        rs[i] = rs[i] / 12.92;
-      } else {
-        rs[i] = pow((rs[i] + 0.055) / 1.055, 2.4).toDouble();
-      }
-    }
-
-    return 0.2126 * rs[0] + 0.7152 * rs[1] + 0.0722 * rs[2];
+    return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
   }
 
-  /// Calculate contrast of a color against another color
-  static double contrast(List<int> rgb1, List<int> rgb2) {
-    double lum1 = luminance(rgb1) + 0.05;
-    double lum2 = luminance(rgb2) + 0.05;
-
-    return max(lum1, lum2) / min(lum1, lum2);
+  static double contrast(rgb1, rgb2) {
+    return luminance(rgb2[0], rgb2[1], rgb2[2]) /
+        luminance(rgb1[0], rgb1[1], rgb1[2]);
   }
 }

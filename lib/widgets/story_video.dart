@@ -26,8 +26,8 @@ class VideoLoader {
       onComplete();
     }
 
-    final fileStream = DefaultCacheManager()
-        .getFileStream(this.url, headers: this.requestHeaders as Map<String, String>?);
+    final fileStream = DefaultCacheManager().getFileStream(this.url,
+        headers: this.requestHeaders as Map<String, String>?);
 
     fileStream.listen((fileResponse) {
       if (fileResponse is FileInfo) {
@@ -44,29 +44,23 @@ class VideoLoader {
 class StoryVideo extends StatefulWidget {
   final StoryController? storyController;
   final VideoLoader videoLoader;
-  final Widget? loadingWidget;
-  final Widget? errorWidget;
 
-  StoryVideo(this.videoLoader, {
+  StoryVideo(
+    this.videoLoader, {
     Key? key,
     this.storyController,
-    this.loadingWidget,
-    this.errorWidget,
   }) : super(key: key ?? UniqueKey());
 
-  static StoryVideo url(String url, {
+  static StoryVideo url(
+    String url, {
     StoryController? controller,
     Map<String, dynamic>? requestHeaders,
     Key? key,
-    Widget? loadingWidget,
-    Widget? errorWidget,
   }) {
     return StoryVideo(
       VideoLoader(url, requestHeaders: requestHeaders),
       storyController: controller,
       key: key,
-      loadingWidget: loadingWidget,
-      errorWidget: errorWidget,
     );
   }
 
@@ -128,7 +122,7 @@ class StoryVideoState extends State<StoryVideo> {
 
     return widget.videoLoader.state == LoadState.loading
         ? Center(
-            child: widget.loadingWidget?? Container(
+            child: Container(
               width: 70,
               height: 70,
               child: CircularProgressIndicator(
@@ -138,12 +132,13 @@ class StoryVideoState extends State<StoryVideo> {
             ),
           )
         : Center(
-            child: widget.errorWidget?? Text(
-            "Media failed to load.",
-            style: TextStyle(
-              color: Colors.white,
+            child: Text(
+              "Media failed to load.",
+              style: TextStyle(
+                color: Colors.white,
+              ),
             ),
-          ));
+          );
   }
 
   @override
