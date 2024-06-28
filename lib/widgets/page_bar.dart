@@ -1,16 +1,17 @@
-import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
-import 'package:story_view/enums/indicator_height_enum.dart';
-import 'package:story_view/models/page_data_model.dart';
+import 'package:collection/collection.dart'; // Importing collection package for using firstWhereOrNull
+import 'package:flutter/material.dart'; // Importing Flutter material package
+import 'package:story_view/enums/indicator_height_enum.dart'; // Importing custom enum for indicator height
+import 'package:story_view/models/page_data_model.dart'; // Importing custom model for page data
 
-import 'story_progress_indicator.dart';
+import 'story_progress_indicator.dart'; // Importing custom story progress indicator widget
 
+/// Widget to display the progress indicators for the story pages.
 class PageBar extends StatefulWidget {
-  final List<PageData> pages;
-  final Animation<double>? animation;
-  final IndicatorHeight indicatorHeight;
-  final Color? indicatorColor;
-  final Color? indicatorForegroundColor;
+  final List<PageData> pages; // List of story pages
+  final Animation<double>? animation; // Animation to control progress
+  final IndicatorHeight indicatorHeight; // Height of the progress indicators
+  final Color? indicatorColor; // Color of the indicator background
+  final Color? indicatorForegroundColor; // Color of the indicator foreground
 
   PageBar(
     this.pages,
@@ -22,22 +23,22 @@ class PageBar extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() {
-    return PageBarState();
-  }
+  State<StatefulWidget> createState() => PageBarState();
 }
 
 class PageBarState extends State<PageBar> {
-  double spacing = 4;
+  double spacing = 4; // Spacing between the indicators
 
   @override
   void initState() {
     super.initState();
 
+    // Adjust spacing based on the number of pages
     int count = widget.pages.length;
     spacing = (count > 15) ? 2 : ((count > 10) ? 3 : 4);
 
-    widget.animation!.addListener(() {
+    // Listen to animation changes to refresh the UI
+    widget.animation?.addListener(() {
       setState(() {});
     });
   }
@@ -49,6 +50,7 @@ class PageBarState extends State<PageBar> {
     }
   }
 
+  /// Determines if a page is currently playing based on its shown status.
   bool isPlaying(PageData page) {
     return widget.pages.firstWhereOrNull((it) => !it.shown) == page;
   }
@@ -59,8 +61,8 @@ class PageBarState extends State<PageBar> {
       children: widget.pages.map((it) {
         return Expanded(
           child: Container(
-            padding: EdgeInsets.only(
-                right: widget.pages.last == it ? 0 : this.spacing),
+            padding:
+                EdgeInsets.only(right: widget.pages.last == it ? 0 : spacing),
             child: StoryProgressIndicator(
               isPlaying(it) ? widget.animation!.value : (it.shown ? 1 : 0),
               indicatorHeight: widget.indicatorHeight == IndicatorHeight.large

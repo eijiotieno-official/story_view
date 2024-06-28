@@ -1,31 +1,38 @@
 import 'package:rxdart/rxdart.dart';
 import 'package:story_view/enums/playback_state_enum.dart';
 
+/// A controller class to manage the playback state of stories.
 class StoryController {
-  /// Stream that broadcasts the playback state of the stories.
-  final playbackNotifier = BehaviorSubject<PlaybackState>();
+  /// A stream that broadcasts the playback state of the stories.
+  /// Using BehaviorSubject to provide the last emitted value to new subscribers.
+  final _playbackNotifier = BehaviorSubject<PlaybackState>();
 
-  /// Notify listeners with a [PlaybackState.pause] state
+  /// Expose the playback state stream.
+  Stream<PlaybackState> get playbackState => _playbackNotifier.stream;
+
+  /// Pauses the story playback by adding a [PlaybackState.pause] state to the stream.
   void pause() {
-    playbackNotifier.add(PlaybackState.pause);
+    _playbackNotifier.add(PlaybackState.pause);
   }
 
-  /// Notify listeners with a [PlaybackState.play] state
+  /// Resumes the story playback by adding a [PlaybackState.play] state to the stream.
   void play() {
-    playbackNotifier.add(PlaybackState.play);
+    _playbackNotifier.add(PlaybackState.play);
   }
 
+  /// Moves to the next story by adding a [PlaybackState.next] state to the stream.
   void next() {
-    playbackNotifier.add(PlaybackState.next);
+    _playbackNotifier.add(PlaybackState.next);
   }
 
+  /// Moves to the previous story by adding a [PlaybackState.previous] state to the stream.
   void previous() {
-    playbackNotifier.add(PlaybackState.previous);
+    _playbackNotifier.add(PlaybackState.previous);
   }
 
-  /// Remember to call dispose when the story screen is disposed to close
-  /// the notifier stream.
+  /// Disposes of the controller by closing the [BehaviorSubject] stream.
+  /// This is important to prevent memory leaks.
   void dispose() {
-    playbackNotifier.close();
+    _playbackNotifier.close();
   }
 }

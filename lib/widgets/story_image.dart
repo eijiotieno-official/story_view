@@ -8,54 +8,55 @@ import 'package:story_view/enums/playback_state_enum.dart';
 
 import '../controller/story_controller.dart';
 
-/// Utitlity to load image (gif, png, jpg, etc) media just once. Resource is
+/// Utility to load image (gif, png, jpg, etc) media just once. Resource is
 /// cached to disk with default configurations of [DefaultCacheManager].
 class ImageLoader {
-  ui.Codec? frames;
+  ui.Codec? frames; // Holds the image frames (for animated images)
 
-  String url;
+  final String url; // URL of the image to be loaded
 
-  Map<String, dynamic>? requestHeaders;
+  final Map<String, dynamic>? requestHeaders; // Optional HTTP request headers
 
-  LoadState state = LoadState.loading; // by default
+  LoadState state = LoadState.loading; // Initial state is loading
 
   ImageLoader(this.url, {this.requestHeaders});
 
   /// Load image from disk cache first, if not found then load from network.
   /// `onComplete` is called when [imageBytes] become available.
   void loadImage(VoidCallback onComplete) {
-    if (this.frames != null) {
-      this.state = LoadState.success;
+    if (frames != null) {
+      // If frames are already loaded, set state to success and call onComplete
+      state = LoadState.success;
       onComplete();
+      return;
     }
 
-    final fileStream = DefaultCacheManager().getFileStream(this.url,
-        headers: this.requestHeaders as Map<String, String>?);
+    // Fetch the file from the cache manager
+    final fileStream = DefaultCacheManager()
+        .getFileStream(url, headers: requestHeaders as Map<String, String>?);
 
     fileStream.listen(
       (fileResponse) {
-        if (!(fileResponse is FileInfo)) return;
-        // the reason for this is that, when the cache manager fetches
-        // the image again from network, the provided `onComplete` should
-        // not be called again
-        if (this.frames != null) {
-          return;
-        }
+        if (fileResponse is! FileInfo) return;
 
+        // If frames are already loaded, do nothing
+        if (frames != null) return;
+
+        // Read image bytes
         final imageBytes = fileResponse.file.readAsBytesSync();
+        state = LoadState.success;
 
-        this.state = LoadState.success;
-
+        // Decode the image bytes
         ui.instantiateImageCodec(imageBytes).then((codec) {
-          this.frames = codec;
+          frames = codec;
           onComplete();
         }, onError: (error) {
-          this.state = LoadState.failure;
+          state = LoadState.failure;
           onComplete();
         });
       },
       onError: (error) {
-        this.state = LoadState.failure;
+        state = LoadState.failure;
         onComplete();
       },
     );
@@ -93,26 +94,26 @@ class StoryImage extends StatefulWidget {
 }
 
 class StoryImageState extends State<StoryImage> {
-  ui.Image? currentFrame;
+  ui.Image?
+      currentFrame; // Holds the current frame of the image (for animated images)
 
-  Timer? _timer;
+  Timer? _timer; // Timer for handling frame updates
 
-  StreamSubscription<PlaybackState>? _streamSubscription;
+  StreamSubscription<PlaybackState>?
+      _streamSubscription; // Subscription to playback state changes
 
   @override
   void initState() {
     super.initState();
 
     if (widget.controller != null) {
-      this._streamSubscription =
-          widget.controller!.playbackNotifier.listen((playbackState) {
-        // for the case of gifs we need to pause/play
-        if (widget.imageLoader.frames == null) {
-          return;
-        }
+      // Listen to playback state changes
+      _streamSubscription =
+          widget.controller!.playbackState.listen((playbackState) {
+        if (widget.imageLoader.frames == null) return;
 
         if (playbackState == PlaybackState.pause) {
-          this._timer?.cancel();
+          _timer?.cancel();
         } else {
           forward();
         }
@@ -121,14 +122,14 @@ class StoryImageState extends State<StoryImage> {
 
     widget.controller?.pause();
 
-    widget.imageLoader.loadImage(() async {
+    // Load the image
+    widget.imageLoader.loadImage(() {
       if (mounted) {
         if (widget.imageLoader.state == LoadState.success) {
           widget.controller?.play();
           forward();
         } else {
-          // refresh to show error
-          setState(() {});
+          setState(() {}); // Refresh to show error
         }
       }
     });
@@ -138,7 +139,6 @@ class StoryImageState extends State<StoryImage> {
   void dispose() {
     _timer?.cancel();
     _streamSubscription?.cancel();
-
     super.dispose();
   }
 
@@ -149,31 +149,32 @@ class StoryImageState extends State<StoryImage> {
     }
   }
 
+  /// Advances to the next frame of the animated image
   void forward() async {
-    this._timer?.cancel();
+    _timer?.cancel();
 
     if (widget.controller != null &&
-        widget.controller!.playbackNotifier.stream.value ==
-            PlaybackState.pause) {
+        widget.controller!.playbackState.first == PlaybackState.pause) {
       return;
     }
 
     final nextFrame = await widget.imageLoader.frames!.getNextFrame();
 
-    this.currentFrame = nextFrame.image;
+    currentFrame = nextFrame.image;
 
     if (nextFrame.duration > Duration(milliseconds: 0)) {
-      this._timer = Timer(nextFrame.duration, forward);
+      _timer = Timer(nextFrame.duration, forward);
     }
 
     setState(() {});
   }
 
+  /// Returns the appropriate widget based on the current load state
   Widget getContentView() {
     switch (widget.imageLoader.state) {
       case LoadState.success:
         return RawImage(
-          image: this.currentFrame,
+          image: currentFrame,
           fit: BoxFit.fitWidth,
         );
       case LoadState.failure:
