@@ -3,8 +3,9 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:story_view/enums/load_state_enum.dart';
+import 'package:story_view/enums/playback_state_enum.dart';
 
-import '../utils.dart';
 import '../controller/story_controller.dart';
 
 /// Utitlity to load image (gif, png, jpg, etc) media just once. Resource is
@@ -66,42 +67,24 @@ class ImageLoader {
 /// forward animated media.
 class StoryImage extends StatefulWidget {
   final ImageLoader imageLoader;
-
-  final BoxFit? fit;
-
   final StoryController? controller;
-  final Widget? loadingWidget;
-  final Widget? errorWidget;
 
   StoryImage(
     this.imageLoader, {
     Key? key,
     this.controller,
-    this.fit,
-    this.loadingWidget,
-    this.errorWidget,
   }) : super(key: key ?? UniqueKey());
 
   /// Use this shorthand to fetch images/gifs from the provided [url]
   factory StoryImage.url(
     String url, {
     StoryController? controller,
-    Map<String, dynamic>? requestHeaders,
-    BoxFit fit = BoxFit.fitWidth,
-    Widget? loadingWidget,
-    Widget? errorWidget,
     Key? key,
   }) {
     return StoryImage(
-        ImageLoader(
-          url,
-          requestHeaders: requestHeaders,
-        ),
-        controller: controller,
-        fit: fit,
-        loadingWidget: loadingWidget,
-        errorWidget: errorWidget,
-        key: key,
+      ImageLoader(url),
+      controller: controller,
+      key: key,
     );
   }
 
@@ -191,19 +174,20 @@ class StoryImageState extends State<StoryImage> {
       case LoadState.success:
         return RawImage(
           image: this.currentFrame,
-          fit: widget.fit,
+          fit: BoxFit.fitWidth,
         );
       case LoadState.failure:
         return Center(
-            child: widget.errorWidget?? Text(
-          "Image failed to load.",
-          style: TextStyle(
-            color: Colors.white,
+          child: Text(
+            "Image failed to load.",
+            style: TextStyle(
+              color: Colors.white,
+            ),
           ),
-        ));
+        );
       default:
         return Center(
-          child: widget.loadingWidget?? Container(
+          child: Container(
             width: 70,
             height: 70,
             child: CircularProgressIndicator(
