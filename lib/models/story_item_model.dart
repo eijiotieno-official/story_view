@@ -51,7 +51,7 @@ class StoryItem {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              backgroundColor.withOpacity(0.35),
+              backgroundColor.withOpacity(0.5),
               backgroundColor,
             ],
           ),

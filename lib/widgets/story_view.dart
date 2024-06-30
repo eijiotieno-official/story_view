@@ -267,98 +267,101 @@ class StoryViewState extends State<StoryView> with TickerProviderStateMixin {
   // Build method to render the widget tree
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        _currentView, // Display the current story item view
-        Visibility(
-          visible: widget.progressPosition != ProgressPosition.none,
-          child: Align(
-            alignment: widget.progressPosition == ProgressPosition.top
-                ? Alignment.topCenter
-                : Alignment.bottomCenter,
-            child: SafeArea(
-              bottom: widget.inline ? false : true,
-              // We use SafeArea here for notched and bezel-less phones
-              child: Container(
-                padding: widget.indicatorOuterPadding,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Page bar to show the progress of the story items
-                    PageBar(
-                      widget.storyItems
-                          .map((it) => PageData(it.duration, it.shown))
-                          .toList(),
-                      this._currentAnimation,
-                      key: UniqueKey(),
-                      indicatorHeight: widget.indicatorHeight,
-                      indicatorColor: widget.indicatorColor,
-                      indicatorForegroundColor: widget.indicatorForegroundColor,
-                    ),
-                    if (widget.groupInfo != null) widget.groupInfo!,
-                  ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16.0),
+      child: Stack(
+        children: <Widget>[
+          _currentView, // Display the current story item view
+          Visibility(
+            visible: widget.progressPosition != ProgressPosition.none,
+            child: Align(
+              alignment: widget.progressPosition == ProgressPosition.top
+                  ? Alignment.topCenter
+                  : Alignment.bottomCenter,
+              child: SafeArea(
+                bottom: widget.inline ? false : true,
+                // We use SafeArea here for notched and bezel-less phones
+                child: Container(
+                  padding: widget.indicatorOuterPadding,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Page bar to show the progress of the story items
+                      PageBar(
+                        widget.storyItems
+                            .map((it) => PageData(it.duration, it.shown))
+                            .toList(),
+                        this._currentAnimation,
+                        key: UniqueKey(),
+                        indicatorHeight: widget.indicatorHeight,
+                        indicatorColor: widget.indicatorColor,
+                        indicatorForegroundColor: widget.indicatorForegroundColor,
+                      ),
+                      if (widget.groupInfo != null) widget.groupInfo!,
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        Align(
-            alignment: Alignment.centerRight,
+          Align(
+              alignment: Alignment.centerRight,
+              heightFactor: 1,
+              child: GestureDetector(
+                onTapDown: (details) {
+                  widget.controller.pause(); // Pause the story on tap down
+                },
+                onTapCancel: () {
+                  widget.controller.play(); // Play the story on tap cancel
+                },
+                onTapUp: (details) {
+                  // If debounce timed out, continue animation, else go to next story
+                  if (_nextDebouncer?.isActive == false) {
+                    widget.controller.play();
+                  } else {
+                    widget.controller.next();
+                  }
+                },
+                onVerticalDragStart: (details) {
+                  widget.controller
+                      .pause(); // Pause the story on vertical drag start
+                },
+                onVerticalDragCancel: () {
+                  widget.controller
+                      .play(); // Play the story on vertical drag cancel
+                },
+                onVerticalDragUpdate: (details) {
+                  if (verticalDragInfo == null) {
+                    verticalDragInfo =
+                        VerticalDragInfo(); // Initialize vertical drag info
+                  }
+      
+                  verticalDragInfo!
+                      .update(details.primaryDelta!); // Update drag info
+                },
+                onVerticalDragEnd: (details) {
+                  widget.controller.play(); // Play the story on vertical drag end
+                  // Finish up drag cycle
+                  if (!verticalDragInfo!.cancel &&
+                      widget.onVerticalSwipeComplete != null) {
+                    widget.onVerticalSwipeComplete!(verticalDragInfo!
+                        .direction!); // Call the vertical swipe callback
+                  }
+      
+                  verticalDragInfo = null; // Reset drag info
+                },
+              )),
+          Align(
+            alignment: Alignment.centerLeft,
             heightFactor: 1,
-            child: GestureDetector(
-              onTapDown: (details) {
-                widget.controller.pause(); // Pause the story on tap down
-              },
-              onTapCancel: () {
-                widget.controller.play(); // Play the story on tap cancel
-              },
-              onTapUp: (details) {
-                // If debounce timed out, continue animation, else go to next story
-                if (_nextDebouncer?.isActive == false) {
-                  widget.controller.play();
-                } else {
-                  widget.controller.next();
-                }
-              },
-              onVerticalDragStart: (details) {
-                widget.controller
-                    .pause(); // Pause the story on vertical drag start
-              },
-              onVerticalDragCancel: () {
-                widget.controller
-                    .play(); // Play the story on vertical drag cancel
-              },
-              onVerticalDragUpdate: (details) {
-                if (verticalDragInfo == null) {
-                  verticalDragInfo =
-                      VerticalDragInfo(); // Initialize vertical drag info
-                }
-
-                verticalDragInfo!
-                    .update(details.primaryDelta!); // Update drag info
-              },
-              onVerticalDragEnd: (details) {
-                widget.controller.play(); // Play the story on vertical drag end
-                // Finish up drag cycle
-                if (!verticalDragInfo!.cancel &&
-                    widget.onVerticalSwipeComplete != null) {
-                  widget.onVerticalSwipeComplete!(verticalDragInfo!
-                      .direction!); // Call the vertical swipe callback
-                }
-
-                verticalDragInfo = null; // Reset drag info
-              },
-            )),
-        Align(
-          alignment: Alignment.centerLeft,
-          heightFactor: 1,
-          child: SizedBox(
-              child: GestureDetector(onTap: () {
-                widget.controller.previous(); // Go to the previous story on tap
-              }),
-              width: 70),
-        ),
-      ],
+            child: SizedBox(
+                child: GestureDetector(onTap: () {
+                  widget.controller.previous(); // Go to the previous story on tap
+                }),
+                width: 70),
+          ),
+        ],
+      ),
     );
   }
 }

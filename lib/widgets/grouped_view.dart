@@ -14,6 +14,7 @@ class GroupedView extends StatefulWidget {
   final Widget? groupInfo; // Widget to show group info
   final List<GroupData> groupedStoryItems; // List of grouped story items
 
+  final void Function(GroupData group, int index)? onGroupShow;
   final void Function(StoryItem item, int index)?
       onStoryShow; // Callback for when a story is shown
   final Function(Direction)?
@@ -46,57 +47,81 @@ class GroupedView extends StatefulWidget {
     this.indicatorForegroundColor,
     this.indicatorHeight,
     this.indicatorOuterPadding,
+    this.onGroupShow,
   }) : super(key: key);
 
   @override
-  State<GroupedView> createState() =>
-      _GroupedViewState(); // Create and return the state object
+  State<GroupedView> createState() => _GroupedViewState();
 }
 
-// State class for GroupedView widget
 class _GroupedViewState extends State<GroupedView> {
   @override
+  void initState() {
+    super.initState();
+
+    if (widget.groupedStoryItems.isNotEmpty && widget.onGroupShow != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onGroupShow!(widget.groupedStoryItems[0], 0);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return PageView.builder(
-      onPageChanged: (value) {
-        if (widget.onGroupComplete != null) {
-          widget
-              .onGroupComplete!(); // Call the group complete callback when the page changes
-        }
-      },
-      physics:
-          const BouncingScrollPhysics(), // Set the physics for page scrolling
-      itemCount: widget.groupedStoryItems.length, // Number of pages (groups)
-      controller: widget.pageController, // PageController to control page view
-      itemBuilder: (context, index) {
-        return StoryView(
-          groupInfo:
-              widget.groupInfo, // Display additional group info if provided
-          storyItems: widget.groupedStoryItems[index]
-              .stories, // Pass the stories for the current group
-          controller: widget.storyController, // Controller for story playback
-          onVerticalSwipeComplete: widget
-              .onVerticalSwipeComplete, // Callback for vertical swipe gesture
-          onComplete: () {
-            if (index < widget.groupedStoryItems.length - 1) {
-              // If not the last group, move to the next group
-              setState(() {
+    return Material(
+      color: Colors.black,
+      borderRadius: BorderRadius.circular(16.0),
+      child: PageView.builder(
+        onPageChanged: (value) {
+          if (widget.onGroupShow != null) {
+            widget.onGroupShow!(widget.groupedStoryItems[value],
+                value); // Call the group complete callback when the page changes
+          }
+        },
+        physics:
+            const BouncingScrollPhysics(), // Set the physics for page scrolling
+        itemCount: widget.groupedStoryItems.length, // Number of pages (groups)
+        controller:
+            widget.pageController, // PageController to control page view
+        itemBuilder: (context, pageIndex) {
+          return StoryView(
+            groupInfo:
+                widget.groupInfo, // Display additional group info if provided
+            storyItems: widget.groupedStoryItems[pageIndex]
+                .stories, // Pass the stories for the current group
+            controller: widget.storyController, // Controller for story playback
+            onVerticalSwipeComplete: widget
+                .onVerticalSwipeComplete, // Callback for vertical swipe gesture
+            onComplete: () {
+              if (pageIndex < widget.groupedStoryItems.length - 1) {
+                // If not the last group, move to the next group
                 widget.pageController.nextPage(
                   duration: Duration(
                       milliseconds: 300), // Animation duration for page change
                   curve: Curves.linear, // Animation curve for page change
                 );
-              });
-            } else {
-              // If the last group, call the complete callback
-              if (widget.onComplete != null) {
-                widget.onComplete!();
+              } else {
+                // If the last group, call the complete callback
+                if (widget.onComplete != null) {
+                  widget.onComplete!();
+                }
               }
-            }
-          },
-          onStoryShow: widget.onStoryShow, // Callback for when a story is shown
-        );
-      },
+            },
+            onStoryShow: (storyItem, storyIndex) {
+              if (widget.onStoryShow != null) {
+                widget.onStoryShow!(storyItem, storyIndex);
+              }
+              if (widget.onGroupComplete != null) {
+                bool islastItem = storyIndex ==
+                    (widget.groupedStoryItems[pageIndex].stories.length - 1);
+                if (islastItem) {
+                  widget.onGroupComplete!();
+                }
+              }
+            }, // Callback for when a story is shown
+          );
+        },
+      ),
     );
   }
 }
