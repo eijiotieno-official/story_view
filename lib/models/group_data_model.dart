@@ -1,9 +1,9 @@
-import 'story_item_model.dart';
+import 'package:story_view/story_view.dart';
 
-class GroupData {
+class GroupItem {
   final String key;
   final List<StoryItem> stories;
-  GroupData({
+  GroupItem({
     required this.key,
     required this.stories,
   });

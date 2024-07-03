@@ -8,16 +8,13 @@ import 'package:story_view/widgets/story_video.dart';
 // Represents an item in a story feed, could be text, image, or video
 class StoryItem {
   final String id; // Unique identifier for the story item
-  final Duration duration; // Duration for which the item should be displayed
   bool shown; // Indicates if the item has been shown
-
   // Widget representing the visual content of the story item
   final Widget view;
 
   // Constructor for text-based story item
   StoryItem({
     required this.id,
-    required this.duration,
     required this.shown,
     required this.view,
   });
@@ -27,6 +24,7 @@ class StoryItem {
     required String id,
     required String text,
     required Color backgroundColor,
+    required StoryController controller,
     required bool shown,
     Key? key,
   }) {
@@ -40,6 +38,8 @@ class StoryItem {
       255,
       255
     ] /** white text */);
+
+    controller.setDuration(Duration(seconds: 8));
 
     // Return a StoryItem configured with a text view
     return StoryItem(
@@ -74,7 +74,6 @@ class StoryItem {
         ),
       ),
       shown: shown,
-      duration: Duration(seconds: 8),
     );
   }
 
@@ -87,6 +86,7 @@ class StoryItem {
     String? caption,
     required bool shown,
   }) {
+    controller.setDuration(Duration(seconds: 8));
     // Return a StoryItem configured with an image view
     return StoryItem(
       id: id,
@@ -127,7 +127,6 @@ class StoryItem {
         ),
       ),
       shown: shown,
-      duration: Duration(seconds: 8),
     );
   }
 
@@ -137,7 +136,6 @@ class StoryItem {
     required String url,
     required StoryController controller,
     Key? key,
-    required Duration duration,
     String? caption,
     required bool shown,
   }) {
@@ -181,7 +179,6 @@ class StoryItem {
         ),
       ),
       shown: shown,
-      duration: duration,
     );
   }
 
@@ -194,7 +191,6 @@ class StoryItem {
   }) {
     return StoryItem(
       id: id ?? this.id,
-      duration: duration ?? this.duration,
       shown: shown ?? this.shown,
       view: view ?? this.view,
     );
@@ -203,6 +199,6 @@ class StoryItem {
   // String representation of the StoryItem for debugging purposes
   @override
   String toString() {
-    return 'StoryItem(id: $id, duration: $duration, shown: $shown, view: $view)';
+    return 'StoryItem(id: $id, shown: $shown, view: $view)';
   }
 }

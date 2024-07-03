@@ -3,10 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:story_view/enums/load_state_enum.dart';
-import 'package:story_view/enums/playback_state_enum.dart';
-
-import '../controller/story_controller.dart';
+import 'package:story_view/story_view.dart';
 
 /// Utility to load image (gif, png, jpg, etc) media just once. Resource is
 /// cached to disk with default configurations of [DefaultCacheManager].

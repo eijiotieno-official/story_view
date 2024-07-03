@@ -1,9 +1,6 @@
 import 'package:collection/collection.dart'; // Importing collection package for using firstWhereOrNull
 import 'package:flutter/material.dart'; // Importing Flutter material package
-import 'package:story_view/enums/indicator_height_enum.dart'; // Importing custom enum for indicator height
-import 'package:story_view/models/page_data_model.dart'; // Importing custom model for page data
-
-import 'story_progress_indicator.dart'; // Importing custom story progress indicator widget
+import 'package:story_view/story_view.dart';
 
 /// Widget to display the progress indicators for the story pages.
 class PageBar extends StatefulWidget {
@@ -16,7 +13,7 @@ class PageBar extends StatefulWidget {
   PageBar(
     this.pages,
     this.animation, {
-    this.indicatorHeight = IndicatorHeight.large,
+    this.indicatorHeight = IndicatorHeight.medium,
     this.indicatorColor,
     this.indicatorForegroundColor,
     Key? key,

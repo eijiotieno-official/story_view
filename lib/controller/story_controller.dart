@@ -3,6 +3,14 @@ import 'package:story_view/enums/playback_state_enum.dart';
 
 /// A controller class to manage the playback state of stories.
 class StoryController {
+  Duration _duration = Duration.zero;
+
+  Duration get duration => _duration;
+
+  void setDuration(Duration newDuration) {
+    _duration = newDuration;
+  }
+
   /// A stream that broadcasts the playback state of the stories.
   /// Using BehaviorSubject to provide the last emitted value to new subscribers.
   final _playbackNotifier = BehaviorSubject<PlaybackState>();

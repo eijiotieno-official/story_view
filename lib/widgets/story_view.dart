@@ -4,16 +4,7 @@ import 'package:collection/collection.dart'
     show IterableExtension; // Import for convenient iterable operations
 import 'package:flutter/material.dart'; // Import for Flutter widgets and material design
 
-import 'package:story_view/enums/direction_enum.dart'; // Import for swipe direction enum
-import 'package:story_view/enums/indicator_height_enum.dart'; // Import for indicator height enum
-import 'package:story_view/enums/playback_state_enum.dart'; // Import for playback state enum
-import 'package:story_view/enums/progress_position_enum.dart'; // Import for progress position enum
-import 'package:story_view/models/page_data_model.dart'; // Import for page data model
-import 'package:story_view/models/story_item_model.dart'; // Import for story item model
-
-import '../controller/story_controller.dart'; // Import for story controller
-import '../utils.dart'; // Import for utility functions
-import 'page_bar.dart'; // Import for page bar widget
+import 'package:story_view/story_view.dart';
 
 // Main StoryView widget that displays the story items
 class StoryView extends StatefulWidget {
@@ -33,6 +24,7 @@ class StoryView extends StatefulWidget {
   final EdgeInsetsGeometry
       indicatorOuterPadding; // Outer padding for the indicator
   final Widget? groupInfo; // Additional info widget for the group
+  final VoidCallback? onPreviousGroup;
 
   // Constructor with required and optional parameters
   StoryView({
@@ -50,6 +42,7 @@ class StoryView extends StatefulWidget {
     this.indicatorHeight = IndicatorHeight.large,
     this.indicatorOuterPadding = const EdgeInsets.all(16.0),
     this.groupInfo,
+    this.onPreviousGroup,
   }) : super(key: key);
 
   @override
@@ -161,7 +154,7 @@ class StoryViewState extends State<StoryView> with TickerProviderStateMixin {
     }
 
     _animationController =
-        AnimationController(duration: storyItem.duration, vsync: this);
+        AnimationController(duration: widget.controller.duration, vsync: this);
 
     // Add listener for animation status changes
     _animationController!.addStatusListener((status) {
@@ -206,14 +199,14 @@ class StoryViewState extends State<StoryView> with TickerProviderStateMixin {
 
   // Function to go back to the previous story item
   void _goBack() {
-    _animationController!.stop();
-
     if (this._currentStory == null) {
       widget.storyItems.last.shown = false;
     }
 
     if (this._currentStory == widget.storyItems.first) {
-      _beginPlay();
+      if (widget.onPreviousGroup != null) {
+        widget.onPreviousGroup!();
+      }
     } else {
       this._currentStory!.shown = false;
       int lastPos = widget.storyItems.indexOf(this._currentStory!);
@@ -289,13 +282,14 @@ class StoryViewState extends State<StoryView> with TickerProviderStateMixin {
                       // Page bar to show the progress of the story items
                       PageBar(
                         widget.storyItems
-                            .map((it) => PageData(it.duration, it.shown))
+                            .map((it) => PageData(widget.controller.duration, it.shown))
                             .toList(),
                         this._currentAnimation,
                         key: UniqueKey(),
                         indicatorHeight: widget.indicatorHeight,
                         indicatorColor: widget.indicatorColor,
-                        indicatorForegroundColor: widget.indicatorForegroundColor,
+                        indicatorForegroundColor:
+                            widget.indicatorForegroundColor,
                       ),
                       if (widget.groupInfo != null) widget.groupInfo!,
                     ],
@@ -335,19 +329,20 @@ class StoryViewState extends State<StoryView> with TickerProviderStateMixin {
                     verticalDragInfo =
                         VerticalDragInfo(); // Initialize vertical drag info
                   }
-      
+
                   verticalDragInfo!
                       .update(details.primaryDelta!); // Update drag info
                 },
                 onVerticalDragEnd: (details) {
-                  widget.controller.play(); // Play the story on vertical drag end
+                  widget.controller
+                      .play(); // Play the story on vertical drag end
                   // Finish up drag cycle
                   if (!verticalDragInfo!.cancel &&
                       widget.onVerticalSwipeComplete != null) {
                     widget.onVerticalSwipeComplete!(verticalDragInfo!
                         .direction!); // Call the vertical swipe callback
                   }
-      
+
                   verticalDragInfo = null; // Reset drag info
                 },
               )),
@@ -356,7 +351,8 @@ class StoryViewState extends State<StoryView> with TickerProviderStateMixin {
             heightFactor: 1,
             child: SizedBox(
                 child: GestureDetector(onTap: () {
-                  widget.controller.previous(); // Go to the previous story on tap
+                  widget.controller
+                      .previous(); // Go to the previous story on tap
                 }),
                 width: 70),
           ),

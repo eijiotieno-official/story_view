@@ -3,11 +3,8 @@ import 'dart:io'; // For File
 
 import 'package:flutter/material.dart'; // For Flutter widgets
 import 'package:flutter_cache_manager/flutter_cache_manager.dart'; // For caching video files
-import 'package:story_view/enums/load_state_enum.dart'; // For LoadState enum
-import 'package:story_view/enums/playback_state_enum.dart'; // For PlaybackState enum
+import 'package:story_view/story_view.dart';
 import 'package:video_player/video_player.dart'; // For video playback
-
-import '../controller/story_controller.dart'; // For StoryController
 
 /// Class responsible for loading video from a given URL and managing its state.
 class VideoLoader {
@@ -84,6 +81,8 @@ class StoryVideoState extends State<StoryVideo> {
         playerController =
             VideoPlayerController.file(widget.videoLoader.videoFile!);
         playerController!.initialize().then((_) {
+          widget.storyController
+              ?.setDuration(playerController?.value.duration ?? Duration.zero);
           setState(() {}); // Refresh UI when video is ready
           widget.storyController?.play(); // Play the story once video is loaded
         });
